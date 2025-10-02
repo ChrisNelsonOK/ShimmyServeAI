@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  shimmyserve:
+    build: .
+    container_name: shimmyserve-gui
+    ports:
+      - "3000:80"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Shimmy Backend (placeholder for when available)
+  shimmy-server:
+    image: shimmy:latest  # Replace with actual Shimmy image when available
+    container_name: shimmy-inference-server
+    ports:
+      - "8080:8080"
+      - "8081:8081"  # WebSocket port
+    volumes:
+      - ./models:/app/models:ro
+      - ./config:/app/config:ro
+      - shimmy-logs:/app/logs
+    environment:
+      - RUST_LOG=info
+      - SHIMMY_CONFIG_PATH=/app/config/shimmy.toml
+    restart: unless-stopped
+    depends_on:
+      - shimmyserve
+
+volumes:
+  shimmy-logs:
+
+networks:
+  default:
+    name: shimmy-network
+    driver: bridge

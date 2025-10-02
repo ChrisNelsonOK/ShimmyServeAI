@@ -1,0 +1,51 @@
+{
+  "name": "shimmy-serve-backend",
+  "version": "1.0.0",
+  "description": "Real backend API server for ShimmyServe AI application",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "start": "node dist/server.js",
+    "dev": "./scripts/dev.sh",
+    "dev:direct": "tsx watch src/server.ts",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist/",
+    "lint": "eslint src --ext .ts",
+    "test": "jest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "morgan": "^1.10.0",
+    "ws": "^8.16.0",
+    "node-cron": "^3.0.3",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "sqlite3": "^5.1.6",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "express-rate-limit": "^7.1.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9",
+    "@types/ws": "^8.5.10",
+    "@types/node": "^20.11.10",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.5",
+    "typescript": "^5.3.3",
+    "tsx": "^4.7.0",
+    "nodemon": "^3.0.3",
+    "ts-node": "^10.9.2",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.19.1",
+    "@typescript-eslint/parser": "^6.19.1",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.11"
+  },
+  "keywords": ["shimmy", "ai", "backend", "api", "docker", "kubernetes", "ollama"],
+  "author": "ShimmyServe AI",
+  "license": "MIT"
+}

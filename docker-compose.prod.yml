@@ -1,0 +1,140 @@
+version: '3.8'
+
+services:
+  shimmyserveai:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: shimmyserveai-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"   # Frontend (nginx)
+      - "3001:3001"   # Backend API
+    volumes:
+      # Persistent data storage
+      - shimmy_data:/app/data
+      - shimmy_logs:/app/data/logs
+      - shimmy_backups:/app/data/backups
+    environment:
+      # Application settings
+      - NODE_ENV=production
+      - PORT=3001
+      
+      # Database
+      - DATABASE_PATH=/app/data/shimmy.db
+      - BACKUP_PATH=/app/data/backups
+      
+      # Security (CHANGE THESE IN PRODUCTION!)
+      - JWT_SECRET=your-super-secure-jwt-secret-change-this-in-production-min-64-chars
+      - BCRYPT_ROUNDS=12
+      - SESSION_SECRET=another-secure-secret-for-sessions-change-this-too
+      
+      # CORS and frontend
+      - CORS_ORIGIN=http://localhost:3000
+      - FRONTEND_URL=http://localhost:3000
+      
+      # Rate limiting
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+      
+      # Logging
+      - LOG_LEVEL=info
+      - LOG_FILE_PATH=/app/data/logs/app.log
+      - LOG_MAX_SIZE=10mb
+      - LOG_MAX_FILES=10
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - shimmynet
+    
+    # Resource limits (adjust based on your server)
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  # Optional: Add nginx reverse proxy for SSL termination
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: shimmyserveai-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/production.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/ssl/certs:ro
+      - nginx_logs:/var/log/nginx
+    depends_on:
+      - shimmyserveai
+    networks:
+      - shimmynet
+    # Uncomment for SSL deployment
+    # environment:
+    #   - SSL_CERT_PATH=/etc/ssl/certs/cert.pem
+    #   - SSL_KEY_PATH=/etc/ssl/certs/key.pem
+
+  # Optional: Database backup service
+  db-backup:
+    image: alpine:latest
+    container_name: shimmyserveai-backup
+    restart: unless-stopped
+    volumes:
+      - shimmy_data:/data:ro
+      - shimmy_backups:/backups
+    command: >
+      sh -c "
+        apk add --no-cache sqlite &&
+        while true; do
+          sleep 86400;
+          sqlite3 /data/shimmy.db \".backup /backups/shimmy_backup_\$$(date +%Y%m%d_%H%M%S).db\";
+          find /backups -name 'shimmy_backup_*.db' -mtime +7 -delete;
+          echo \"Backup completed at \$$(date)\";
+        done
+      "
+    networks:
+      - shimmynet
+    depends_on:
+      - shimmyserveai
+
+networks:
+  shimmynet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  shimmy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./data
+  shimmy_logs:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./logs
+  shimmy_backups:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./backups
+  nginx_logs:
+    driver: local
+
+# Create required directories
+# Run: mkdir -p data logs backups ssl nginx

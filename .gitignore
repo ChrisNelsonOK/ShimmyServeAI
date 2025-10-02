@@ -1,0 +1,44 @@
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+# Test artifacts
+tests/screenshots/
+tests/reports/
+*-TEST-REPORT.json
+*-TEST-REPORT.md
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Development tools
+.editorconfig
+*.swp
+*.swo
